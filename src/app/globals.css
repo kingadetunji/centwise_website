@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Brand Colours ── */
+  --color-deep-green: #085041;
+  --color-mint: #5DCAA5;
+  --color-navy: #0D1B2A;
+  --color-cream: #F0F9F7;
+  --color-ink: #1C2B27;
+  --color-muted: #5E6B66;
+}
+
+@theme inline {
+  /* ── Fonts (resolved at runtime from next/font CSS vars) ── */
+  --font-heading: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+/* ── Base ── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--color-ink);
+  background-color: #ffffff;
+}
+
+/* ── Accessible focus ring in brand colour ── */
+:focus-visible {
+  outline: 2px solid var(--color-mint);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Scroll-reveal animation ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ── Mint underline link hover ── */
+.mint-link {
+  position: relative;
+  text-decoration: none;
+}
+
+.mint-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--color-mint);
+  transition: width 0.25s ease;
+}
+
+.mint-link:hover::after,
+.mint-link:focus-visible::after {
+  width: 100%;
+}
+
+/* ── Card lift ── */
+.card-hover {
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.card-hover:hover {
+  box-shadow: 0 12px 40px -8px rgba(8, 80, 65, 0.18);
+  transform: translateY(-3px);
+}
