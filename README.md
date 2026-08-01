@@ -22,26 +22,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Contact form — email delivery
 
-In development the form shows a success state and logs submissions to the terminal. No email is actually sent unless you configure Resend.
+The contact form submits directly to [Formspree](https://formspree.io) via `@formspree/react` — no server-side email code or API keys needed. Submissions are delivered to whatever inbox the Formspree form (`meeybpdy`) is configured to notify.
 
-**To enable real email delivery:**
-
-1. Create a free account at [resend.com](https://resend.com) (3,000 emails/month free).
-2. Add and verify your sending domain (or use the sandbox domain for testing).
-3. Generate an API key.
-4. Copy `.env.local.example` to `.env.local` and fill in your values:
-
-```bash
-cp .env.local.example .env.local
-```
-
-```env
-RESEND_API_KEY=re_your_api_key_here
-RESEND_FROM_EMAIL=office@centwiseai.ca    # must be on a verified Resend domain
-CONTACT_TO_EMAIL=office@centwiseai.ca
-```
-
-5. Restart the dev server — form submissions now deliver to `CONTACT_TO_EMAIL`.
+To change the destination address or notification settings, manage them from the [Formspree dashboard](https://formspree.io/forms) — no code changes required.
 
 ---
 
@@ -57,15 +40,7 @@ vercel
 
 Or connect the GitHub repo to Vercel from the [Vercel dashboard](https://vercel.com/new).
 
-**Set environment variables in Vercel:**
-
-Go to **Project → Settings → Environment Variables** and add:
-
-| Variable | Value |
-|---|---|
-| `RESEND_API_KEY` | Your Resend API key |
-| `RESEND_FROM_EMAIL` | Verified sender address |
-| `CONTACT_TO_EMAIL` | Where form submissions land |
+No environment variables are required — the Formspree form ID is embedded in `ContactSection.tsx`.
 
 ---
 
@@ -78,8 +53,6 @@ src/
     layout.tsx           # Root layout — fonts, meta, Open Graph
     page.tsx             # Home page (imports all sections)
     sitemap.ts           # Auto-generated /sitemap.xml
-    api/contact/
-      route.ts           # Contact form handler (Resend or console.log)
   components/
     Navigation.tsx       # Sticky header with mobile menu
     Hero.tsx             # Full-screen hero with abstract graphic
@@ -122,7 +95,7 @@ Defined in `src/app/globals.css` via Tailwind v4 `@theme {}`:
 
 - [ ] Replace the headshot placeholder in `AboutFounder.tsx` with a real photo
 - [ ] Update `next.config.ts` `metadataBase` URL once the domain is live
-- [ ] Configure Resend and set env vars in Vercel
+- [ ] Confirm the Formspree form (`meeybpdy`) notification email is set correctly in the Formspree dashboard
 - [ ] Add real testimonials (or remove the placeholder section) if desired
 - [ ] Verify all Open Graph / social meta tags with [opengraph.xyz](https://www.opengraph.xyz/)
 - [ ] Run `npm run build` locally to catch any type or lint errors before deploy

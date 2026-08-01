@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, FormEvent } from "react";
+import { useForm, ValidationError } from "@formspree/react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const INDUSTRIES = [
@@ -13,23 +14,28 @@ const INDUSTRIES = [
   "Other",
 ];
 
-type FormState = "idle" | "loading" | "success" | "error";
-
 export default function ContactSection() {
   const sectionRef = useScrollReveal();
   const formRef = useScrollReveal();
 
-  const [formState, setFormState] = useState<FormState>("idle");
+  const [state, submitToFormspree] = useForm("meeybpdy");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
   const orgRef = useRef<HTMLInputElement>(null);
   const industryRef = useRef<HTMLSelectElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!nameRef.current?.value.trim()) errs.name = "Name is required.";
+    const email = emailRef.current?.value.trim() ?? "";
+    if (!email) errs.email = "Email is required.";
+    else if (!EMAIL_PATTERN.test(email)) errs.email = "Please enter a valid email address.";
     if (!orgRef.current?.value.trim())
       errs.organization = "Organization is required.";
     if (!industryRef.current?.value)
@@ -39,36 +45,15 @@ export default function ContactSection() {
     return errs;
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
+      e.preventDefault();
       setErrors(errs);
       return;
     }
     setErrors({});
-    setFormState("loading");
-
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: nameRef.current?.value,
-          organization: orgRef.current?.value,
-          industry: industryRef.current?.value,
-          message: messageRef.current?.value,
-        }),
-      });
-
-      if (res.ok) {
-        setFormState("success");
-      } else {
-        setFormState("error");
-      }
-    } catch {
-      setFormState("error");
-    }
+    submitToFormspree(e);
   };
 
   return (
@@ -138,7 +123,7 @@ export default function ContactSection() {
             ref={formRef as React.RefObject<HTMLDivElement>}
             className="reveal reveal-delay-2"
           >
-            {formState === "success" ? (
+            {state.succeeded ? (
               <div className="bg-white/10 border border-white/20 rounded-2xl p-10 text-center">
                 <div className="w-16 h-16 rounded-full bg-mint/20 flex items-center justify-center mx-auto mb-5">
                   <svg className="w-8 h-8 text-mint" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
@@ -171,6 +156,7 @@ export default function ContactSection() {
                   <input
                     ref={nameRef}
                     id="name"
+                    name="name"
                     type="text"
                     autoComplete="name"
                     aria-required="true"
@@ -185,6 +171,68 @@ export default function ContactSection() {
                       {errors.name}
                     </p>
                   )}
+                  <ValidationError
+                    field="name"
+                    errors={state.errors}
+                    className="mt-1.5 text-xs text-red-300"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-white/80 mb-2"
+                  >
+                    Email <span className="text-mint" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    ref={emailRef}
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    aria-required="true"
+                    aria-describedby={errors.email ? "email-error" : undefined}
+                    className={`w-full px-4 py-3 bg-white/10 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-mint transition-colors text-sm ${
+                      errors.email ? "border-red-400" : "border-white/20 focus:border-mint/60"
+                    }`}
+                    placeholder="you@example.com"
+                  />
+                  {errors.email && (
+                    <p id="email-error" role="alert" className="mt-1.5 text-xs text-red-300">
+                      {errors.email}
+                    </p>
+                  )}
+                  <ValidationError
+                    field="email"
+                    errors={state.errors}
+                    className="mt-1.5 text-xs text-red-300"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-white/80 mb-2"
+                  >
+                    Phone <span className="text-white/40 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    ref={phoneRef}
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-mint focus:border-mint/60 transition-colors text-sm"
+                    placeholder="(555) 123-4567"
+                  />
+                  <ValidationError
+                    field="phone"
+                    errors={state.errors}
+                    className="mt-1.5 text-xs text-red-300"
+                  />
                 </div>
 
                 {/* Organization */}
@@ -198,6 +246,7 @@ export default function ContactSection() {
                   <input
                     ref={orgRef}
                     id="organization"
+                    name="organization"
                     type="text"
                     autoComplete="organization"
                     aria-required="true"
@@ -212,6 +261,11 @@ export default function ContactSection() {
                       {errors.organization}
                     </p>
                   )}
+                  <ValidationError
+                    field="organization"
+                    errors={state.errors}
+                    className="mt-1.5 text-xs text-red-300"
+                  />
                 </div>
 
                 {/* Industry */}
@@ -225,6 +279,7 @@ export default function ContactSection() {
                   <select
                     ref={industryRef}
                     id="industry"
+                    name="industry"
                     aria-required="true"
                     aria-describedby={errors.industry ? "industry-error" : undefined}
                     className={`w-full px-4 py-3 bg-white/10 border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-mint transition-colors text-sm appearance-none cursor-pointer ${
@@ -246,6 +301,11 @@ export default function ContactSection() {
                       {errors.industry}
                     </p>
                   )}
+                  <ValidationError
+                    field="industry"
+                    errors={state.errors}
+                    className="mt-1.5 text-xs text-red-300"
+                  />
                 </div>
 
                 {/* Message */}
@@ -259,6 +319,7 @@ export default function ContactSection() {
                   <textarea
                     ref={messageRef}
                     id="message"
+                    name="message"
                     rows={4}
                     aria-required="true"
                     aria-describedby={errors.message ? "message-error" : undefined}
@@ -272,9 +333,14 @@ export default function ContactSection() {
                       {errors.message}
                     </p>
                   )}
+                  <ValidationError
+                    field="message"
+                    errors={state.errors}
+                    className="mt-1.5 text-xs text-red-300"
+                  />
                 </div>
 
-                {formState === "error" && (
+                {state.errors && state.errors.getFormErrors().length > 0 && (
                   <div role="alert" className="px-4 py-3 bg-red-500/15 border border-red-400/30 rounded-xl text-red-300 text-sm">
                     Something went wrong. Please try again or email us directly at{" "}
                     <a href="mailto:office@centwiseai.ca" className="underline">
@@ -285,10 +351,10 @@ export default function ContactSection() {
 
                 <button
                   type="submit"
-                  disabled={formState === "loading"}
+                  disabled={state.submitting}
                   className="w-full py-4 bg-mint text-deep-green text-base font-bold rounded-xl hover:bg-mint/90 active:scale-[0.98] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {formState === "loading" ? (
+                  {state.submitting ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
